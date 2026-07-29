@@ -1,0 +1,40 @@
+name: docker-ui-name
+services:
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # Allow the registry to be deleted-from as well as pushed/pulled
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      # CORS: allow any origin to make requests to the registry API
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: '["*"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '["HEAD","GET","OPTIONS","DELETE"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '["Authorization","Accept","Cache-Control"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: '["Docker-Content-Digest"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials: '["true"]'
+    volumes:
+      - registry-data:/var/lib/registry
+  registry-non:
+    image: registry:2
+    container_name: registry-non
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    environment:
+      # Allow the registry to be deleted-from as well as pushed/pulled
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      # CORS: allow any origin to make requests to the registry API
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: '["*"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '["HEAD","GET","OPTIONS","DELETE"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '["Authorization","Accept","Cache-Control"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: '["Docker-Content-Digest"]'
+      REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials: '["true"]'
+    volumes:
+      - registry-data1:/var/lib/registry
+
+volumes:
+  registry-data:
+  registry-data1:

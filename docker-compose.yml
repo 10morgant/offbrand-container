@@ -1,0 +1,26 @@
+name: docker-ui-name
+services:
+  db:
+    container_name: db
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DATABASE: db
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: StrongPassword123
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d  # runs on first container init only
+
+  server:
+    build: ./
+    ports:
+      - 8001:8000
+    volumes:
+      - ./server/registries.yaml:/app/registries.yaml
+    environment:
+      - DB_URL=postgresql+psycopg2://appuser:StrongPassword123@db:5432/docker
+
+volumes:
+  db_data:
