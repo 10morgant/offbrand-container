@@ -47,6 +47,8 @@ export interface Tag {
     size: number
     created_at: string,
     platforms: string[],
+    variants?:string[]
+    version?:string[]
 }
 
 export interface Stats {

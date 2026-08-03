@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import time
 from typing import Any, Iterable, Iterator
 from urllib.parse import parse_qs, unquote, urlparse
@@ -47,6 +48,33 @@ RETRY_BASE_DELAY = 1.0
 # URL paths like /namespaces/_/images/nginx without special-casing.
 ROOT_NAMESPACE = "library"
 
+# Tag names that are treated as versions even though they aren't numeric.
+KEYWORD_VERSIONS = {
+    "latest", "stable", "edge", "main", "master", "current",
+    "lts", "nightly", "next", "canary", "dev", "rolling",
+}
+
+# Matches segments like 1, 1.2, 1.2.3, v1.2.3
+_VERSION_RE = re.compile(r"^v?\d+(?:\.\d+)*$", re.IGNORECASE)
+
+
+def parse_tag(tag: str) -> tuple[str | None, list[str]]:
+    """Split a tag like `3.14-slim-bookworm` into (version, [variants])."""
+    if not tag:
+        return None, []
+
+    parts = tag.split("-")
+    version: str | None = None
+    variants: list[str] = []
+
+    for part in parts:
+        if version is None and (_VERSION_RE.match(part) or part.lower() in KEYWORD_VERSIONS):
+            version = part
+        else:
+            variants.append(part)
+
+    return version, variants
+
 
 @dataclass
 class TagPayload:
@@ -56,6 +84,8 @@ class TagPayload:
     media_type: str | None
     created_at: datetime | None
     platforms: str | None
+    version: str | None
+    variants: str | None
 
 
 @dataclass
@@ -334,6 +364,8 @@ def upsert_tags_for_payloads(
                         media_type=tag.media_type,
                         created_at=tag.created_at,
                         platforms=tag.platforms,
+                        version=tag.version,
+                        variants=tag.variants,
                         src_registry=registry,
                     )
                 )
@@ -345,6 +377,8 @@ def upsert_tags_for_payloads(
             row.media_type = tag.media_type
             row.created_at = tag.created_at
             row.platforms = tag.platforms
+            row.version = tag.version
+            row.variants = tag.variants
             row.src_registry = registry
             updated += 1
 
@@ -511,6 +545,8 @@ async def fetch_tags_for_image(
                     if platform_name:
                         platforms.append(platform_name)
 
+        version, variants = parse_tag(tag_name)
+
         result.append(
             TagPayload(
                 name=tag_name,
@@ -520,6 +556,8 @@ async def fetch_tags_for_image(
                 created_at=created_at,
                 platforms=json.dumps(sorted(set(platforms))
                                      ) if platforms else None,
+                version=version,
+                variants=json.dumps(variants) if variants else None,
             )
         )
 

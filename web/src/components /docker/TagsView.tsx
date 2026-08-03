@@ -19,6 +19,7 @@ import {IconCheck, IconCopy, IconPackage, IconSearch} from "@tabler/icons-react"
 import {colourTheme} from "#/config/colours.ts";
 import {formatBytes, formatDate} from "#/logic/utils.ts";
 import {PlatformBadges} from "#/components /docker/PlatformBadges.tsx";
+import {VariantBadges} from "#/components /docker/VariantBadges.tsx";
 
 
 interface Props {
@@ -62,6 +63,7 @@ export function TagView({data, loading = false}: Props) {
                 <Table.Thead>
                     <Table.Tr>
                         <Table.Th w={250}>Tag</Table.Th>
+                        <Table.Th w={250}>Variant</Table.Th>
                         <Table.Th>Digest</Table.Th>
                         <Table.Th>Platform(s)</Table.Th>
                         <Table.Th>Size</Table.Th>
@@ -78,6 +80,9 @@ export function TagView({data, loading = false}: Props) {
                                         {tag.tag}
                                     </Text>
                                 </Tooltip>
+                            </Table.Td>
+                            <Table.Td>
+                                <VariantBadges variants={tag.variants ?? []}/>
                             </Table.Td>
                             <Table.Td>
                                 <Tooltip label={tag.digest} withArrow>

@@ -42,6 +42,8 @@ class ImageTags(SQLModel, table=True):
     media_type: str | None = None
     created_at: datetime | None = Field(default=None, index=True)
     platforms: str | None = None
+    version: str | None = Field(default=None, index=True)
+    variants: str | None = None
     src_registry: str = Field(index=True)
 
     image: Image = Relationship(back_populates="tags")
@@ -66,6 +68,8 @@ class ImageTagsRead(SQLModel):
     size: int
     created_at: datetime | None = None
     platforms: List[str] = []
+    version: str | None = None
+    variants: List[str] = []
 
 
 
@@ -120,6 +124,8 @@ def TagDBOtoRead(dbo:ImageTags):
         size=dbo.size,
         created_at=dbo.created_at,
         platforms=[] if not dbo.platforms else json.loads(dbo.platforms),
+        version=dbo.version,
+        variants=[] if not dbo.variants else json.loads(dbo.variants),
     )
 
 
