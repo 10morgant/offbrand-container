@@ -27,7 +27,7 @@ function RouteComponent() {
                 <Container size={1200} pt={40} pb={40}>
                     <Stack>
                         <Breadcrumbs>{breadcrumbItems}</Breadcrumbs>
-                        <NamespacesView viewType={"list"} pageSize={25}/>
+                        <NamespacesView viewType={"grid"} pageSize={100}/>
                     </Stack>
                 </Container>
             </div>

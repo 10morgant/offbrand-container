@@ -1,3 +1,5 @@
+export type ViewType = "grid" | "list"
+
 export interface NamespacesRoot {
     total: number
     limit: number

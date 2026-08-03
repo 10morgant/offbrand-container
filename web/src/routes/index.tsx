@@ -50,8 +50,8 @@ function Home() {
                         <StatCard
                             icon={<IconServer size={24}/>}
                             label="Current Registry"
-                            // value={config?.url ? (new URL(config?.url).toString()) : ""}
-                            value={config?.name}
+                            value={config?.url ? (new URL(config?.url).toString()) : ""}
+                            // value={config?.name}
                             loading={false}
                             color="teal"
                         />

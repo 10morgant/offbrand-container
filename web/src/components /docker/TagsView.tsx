@@ -18,6 +18,7 @@ import type {Image} from "#/logic/types.ts";
 import {IconCheck, IconCopy, IconPackage, IconSearch} from "@tabler/icons-react";
 import {colourTheme} from "#/config/colours.ts";
 import {formatBytes, formatDate} from "#/logic/utils.ts";
+import {PlatformBadges} from "#/components /docker/PlatformBadges.tsx";
 
 
 interface Props {
@@ -50,7 +51,7 @@ export function TagView({data, loading = false}: Props) {
                     value={search}
                     onChange={(event) => setSearch(event.currentTarget.value)}
                     leftSection={loading ? <Loader size={14} color="#2496ED"/> :
-                        <IconSearch size={16} color={colourTheme.brand} />}
+                        <IconSearch size={16} color={colourTheme.brand}/>}
                     placeholder={"Search..."}
                     disabled={loading}
                 />
@@ -60,7 +61,7 @@ export function TagView({data, loading = false}: Props) {
             <Table striped highlightOnHover>
                 <Table.Thead>
                     <Table.Tr>
-                        <Table.Th>Tag</Table.Th>
+                        <Table.Th w={250}>Tag</Table.Th>
                         <Table.Th>Digest</Table.Th>
                         <Table.Th>Platform(s)</Table.Th>
                         <Table.Th>Size</Table.Th>
@@ -72,7 +73,11 @@ export function TagView({data, loading = false}: Props) {
                     {filteredTags.map((tag) => (
                         <Table.Tr key={tag.tag}>
                             <Table.Td>
-                                {tag.tag}
+                                <Tooltip label={tag.tag}>
+                                    <Text truncate={"end"}>
+                                        {tag.tag}
+                                    </Text>
+                                </Tooltip>
                             </Table.Td>
                             <Table.Td>
                                 <Tooltip label={tag.digest} withArrow>
@@ -84,12 +89,7 @@ export function TagView({data, loading = false}: Props) {
                                 </Tooltip>
                             </Table.Td>
                             <Table.Td>
-                                {/*<PlatformBadges tag={tag} />*/}
-                                {tag.platforms.map((platform) => (
-                                    <Text>
-                                        {platform}
-                                    </Text>
-                                ))}
+                                <PlatformBadges platforms={tag.platforms}/>
                             </Table.Td>
                             <Table.Td>
                                 <Text size="sm">{formatBytes(tag.size)}</Text>

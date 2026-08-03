@@ -45,7 +45,7 @@ function RouteComponent() {
     return (
         <>
             <div style={{backgroundColor: colourTheme.hero_body}}>
-                <Container size={1200} pt={40} pb={40}>
+                <Container size={1400} pt={40} pb={40}>
                     <Stack gap={60}>
                         <Stack>
                             <Flex justify={"space-between"}>
@@ -91,7 +91,7 @@ function RouteComponent() {
                     </Stack>
                 </Container>
             </div>
-            <Container pt={40}>
+            <Container size={1400} pt={40}>
                 <Stack>
                     <Paper withBorder p={10}>
                         Docker pull command

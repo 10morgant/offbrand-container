@@ -12,14 +12,13 @@ import {
 } from "@mantine/core";
 import {useMemo, useState} from "react";
 import {compareItems, rankItem} from "@tanstack/match-sorter-utils";
-import type {Image, Namespace} from "#/logic/types.ts";
+import type {Image, Namespace, ViewType} from "#/logic/types.ts";
 import {ImageCard} from "#/components /docker/Cards/ImageCard.tsx";
 import {IconPackage, IconSearch} from "@tabler/icons-react";
 import {colourTheme} from "#/config/colours.ts";
 import {SkeletonCard} from "#/components /docker/Cards/SkeletonCard.tsx";
 
 
-type ViewType = "grid" | "list"
 
 interface Props {
     data?: Namespace;

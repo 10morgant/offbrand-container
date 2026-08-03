@@ -31,7 +31,6 @@ def get_async_db_url() -> str:
     return db
 
 
-
 executor = ProcessPoolExecutor(max_workers=1)
 
 
@@ -64,7 +63,10 @@ async def lifespan(app: FastAPI):
     task.cancel()  # cleanup on shutdown
 
 
-app = FastAPI(lifespan=lifespan, root_path="/")
+app = FastAPI(
+    # lifespan=lifespan,
+    root_path="/"
+)
 
 router = APIRouter(prefix="/api")
 app.include_router(router)
@@ -94,6 +96,8 @@ def read_registries():
 
 @router.get("/registries")
 def get_registries():
+    if len(REGISTRIES) < 1:
+        read_registries()
     return REGISTRIES
 
 

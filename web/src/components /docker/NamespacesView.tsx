@@ -7,18 +7,19 @@ import {fetchNamespacesOptions} from "#/logic/queries.ts";
 import {useRegistryContext} from "#/context/RegistryContext.tsx";
 import {SkeletonCard} from "#/components /docker/Cards/SkeletonCard.tsx";
 import {NamespaceCard} from "#/components /docker/Cards/NamespaceCard.tsx";
+import type { ViewType } from "#/logic/types";
 
 const DEFAULT_PAGE_SIZE = 24;
 
-type NamespacesViewType = "grid" | "list"
 
 interface Props {
     pageSize?: number;
-    viewType?: NamespacesViewType
+    cols?: number;
+    viewType?: ViewType
 }
 
 
-export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, viewType = "grid"}: Props) {
+export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, cols=4, viewType = "grid"}: Props) {
     const {config} = useRegistryContext()
     const [page, setPage] = useState(1);
     const offset = (page - 1) * pageSize;
@@ -47,7 +48,7 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, viewType = "grid"}
                 </Text>
             </Group>
 
-            {!data && !isPending && (
+            {(!data || (data?.total?? 0) < 1) && !isPending && (
                 <EmptyState
                     withIndicatorBackground
                     icon={<IconFolder color="var(--mantine-color-yellow-4)"/>}
@@ -65,12 +66,12 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, viewType = "grid"}
 
             {viewType === "grid" && (
                 <SimpleGrid
-                    cols={{base: 2, sm: 3, md: 4, lg: 6}}
+                    cols={{base: 2, sm: cols}}
                     spacing="sm"
                     style={{opacity: isPlaceholderData ? 0.6 : 1, transition: "opacity 150ms ease"}}
                 >
                     {showSkeleton
-                        ? Array.from({length: 6}).map((_, i) => <SkeletonCard key={i}/>)
+                        ? Array.from({length: cols}).map((_, i) => <SkeletonCard key={i}/>)
                         : namespaces.map((ns, i) => (
                             <NamespaceCard key={i} ns={ns}/>
                         ))}
@@ -83,7 +84,7 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, viewType = "grid"}
                     style={{opacity: isPlaceholderData ? 0.6 : 1, transition: "opacity 150ms ease"}}
                 >
                     {showSkeleton
-                        ? Array.from({length: 6}).map((_, i) => <SkeletonCard key={i}/>)
+                        ? Array.from({length: cols}).map((_, i) => <SkeletonCard key={i}/>)
                         : namespaces.map((ns, i) => (
                             <NamespaceCard key={i} ns={ns}/>
                         ))}
