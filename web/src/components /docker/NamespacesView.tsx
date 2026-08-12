@@ -1,28 +1,57 @@
-import {EmptyState, Group, Pagination, SimpleGrid, Stack, Text, Title,} from "@mantine/core";
+import {EmptyState, Group, Pagination, Select, SimpleGrid, Stack, Text, Title,} from "@mantine/core";
 import {IconFolder} from "@tabler/icons-react";
-import {Link} from "@tanstack/react-router";
+import {Link, useNavigate} from "@tanstack/react-router";
 import {useQuery} from "@tanstack/react-query";
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {fetchNamespacesOptions} from "#/logic/queries.ts";
 import {useRegistryContext} from "#/context/RegistryContext.tsx";
 import {SkeletonCard} from "#/components /docker/Cards/SkeletonCard.tsx";
 import {NamespaceCard} from "#/components /docker/Cards/NamespaceCard.tsx";
-import type { ViewType } from "#/logic/types";
+import type {ViewType} from "#/logic/types";
 
 const DEFAULT_PAGE_SIZE = 24;
+const NAMESPACES_PAGE_SIZE_KEY = 'namespacesPageSize';
 
+const getStoredPageSize = (fallback: number) => {
+    if (typeof window === 'undefined') {
+        return fallback;
+    }
+
+    const stored = window.localStorage.getItem(NAMESPACES_PAGE_SIZE_KEY);
+    if (!stored) {
+        return fallback;
+    }
+
+    const parsed = Number.parseInt(stored, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
 
 interface Props {
-    pageSize?: number;
+    initialPageSize?: number;
     cols?: number;
     viewType?: ViewType
+    page?: number;
 }
 
 
-export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, cols=4, viewType = "grid"}: Props) {
+export function NamespacesView({initialPageSize = DEFAULT_PAGE_SIZE, cols = 4, viewType = "grid", page: routePage}: Props) {
     const {config} = useRegistryContext()
-    const [page, setPage] = useState(1);
+    const navigate = useNavigate();
+    const [pageSize, setPageSize] = useState<number>(() => getStoredPageSize(initialPageSize));
+    const [page, setPage] = useState(routePage && routePage > 0 ? routePage : 1);
     const offset = (page - 1) * pageSize;
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(NAMESPACES_PAGE_SIZE_KEY, pageSize.toString());
+        }
+    }, [pageSize]);
+
+    useEffect(() => {
+        if (routePage && routePage > 0 && routePage !== page) {
+            setPage(routePage);
+        }
+    }, [routePage, page]);
 
     const {data, isPending, isPlaceholderData} = useQuery({
         ...fetchNamespacesOptions(config?.url ?? "http://example.com", pageSize, offset),
@@ -31,6 +60,20 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, cols=4, viewType =
     const namespaces = useMemo(() => data?.items ?? [], [data?.items]);
     const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
     const showSkeleton = isPending;
+
+    const handlePageChange = (nextPage: number) => {
+        const safePage = Math.max(1, nextPage);
+        setPage(safePage);
+        navigate({to: safePage === 1 ? '/namespaces/' : `/namespaces/${safePage}`});
+    };
+
+    const handlePageSizeChange = (value: string | null) => {
+        if (!value) return;
+        const nextSize = parseInt(value, 10);
+        setPageSize(nextSize);
+        setPage(1);
+        navigate({to: '/namespaces/'});
+    };
 
     return (
         <Stack gap="md">
@@ -48,7 +91,7 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, cols=4, viewType =
                 </Text>
             </Group>
 
-            {(!data || (data?.total?? 0) < 1) && !isPending && (
+            {(!data || (data?.total ?? 0) < 1) && !isPending && (
                 <EmptyState
                     withIndicatorBackground
                     icon={<IconFolder color="var(--mantine-color-yellow-4)"/>}
@@ -62,6 +105,18 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, cols=4, viewType =
                         {/*<Button variant="default">Refresh</Button>*/}
                     </EmptyState.Actions>
                 </EmptyState>
+            )}
+
+            {totalPages > 1 && (
+                <Group justify="center">
+                    <Pagination total={totalPages} value={page} onChange={handlePageChange}/>
+                    <Select
+                        placeholder="Page size"
+                        data={[10, 20, initialPageSize, 50, 100].map((size) => ({value: size.toString(), label: `${size} per page`}))}
+                        value={pageSize.toString()}
+                        onChange={handlePageSizeChange}
+                    />
+                </Group>
             )}
 
             {viewType === "grid" && (
@@ -94,7 +149,13 @@ export function NamespacesView({pageSize = DEFAULT_PAGE_SIZE, cols=4, viewType =
 
             {totalPages > 1 && (
                 <Group justify="center">
-                    <Pagination total={totalPages} value={page} onChange={setPage}/>
+                    <Pagination total={totalPages} value={page} onChange={handlePageChange}/>
+                    <Select
+                        placeholder="Page size"
+                        data={[10, 20, initialPageSize, 50, 100].map((size) => ({value: size.toString(), label: `${size} per page`}))}
+                        value={pageSize.toString()}
+                        onChange={handlePageSizeChange}
+                    />
                 </Group>
             )}
         </Stack>

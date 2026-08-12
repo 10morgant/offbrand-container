@@ -8,9 +8,11 @@ dependencies = [
     "asyncpg>=0.30.0",
     "fastapi[standard]>=0.139.2",
     "httpx>=0.28.1",
+    "packaging>=26.3",
     "psycopg2-binary>=2.9.12",
     "pymysql>=1.2.0",
     "pyyaml>=6.0.3",
+    "requests>=2.34.2",
     "sqlmodel>=0.0.39",
     "typer>=0.27.0",
 ]

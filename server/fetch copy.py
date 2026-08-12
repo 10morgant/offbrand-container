@@ -26,7 +26,6 @@ from rich.progress import (
 from rich.table import Table
 from rich.traceback import install as install_rich_traceback
 from sqlmodel import SQLModel, Session, col, create_engine, select
-from packaging.version import parse, InvalidVersion
 
 from models import Image, ImageTags, Namespace, set_last_updated
 
@@ -59,6 +58,24 @@ KEYWORD_VERSIONS = {
 _VERSION_RE = re.compile(r"^v?\d+(?:\.\d+)*$", re.IGNORECASE)
 
 
+def parse_tag(tag: str) -> tuple[str | None, list[str]]:
+    """Split a tag like `3.14-slim-bookworm` into (version, [variants])."""
+    if not tag:
+        return None, []
+
+    parts = tag.split("-")
+    version: str | None = None
+    variants: list[str] = []
+
+    for part in parts:
+        if version is None and (_VERSION_RE.match(part) or part.lower() in KEYWORD_VERSIONS):
+            version = part
+        else:
+            variants.append(part)
+
+    return version, variants
+
+
 @dataclass
 class TagPayload:
     name: str
@@ -77,25 +94,6 @@ class ImagePayload:
     namespace_name: str
     image_name: str
     tags: list[TagPayload]
-
-
-
-def parse_tag(tag: str) -> tuple[str | None, list[str]]:
-    """Split a tag like `3.14-slim-bookworm` into (version, [variants])."""
-    if not tag:
-        return None, []
-
-    parts = tag.split("-")
-    version: str | None = None
-    variants: list[str] = []
-
-    for part in parts:
-        if version is None and (_VERSION_RE.match(part) or part.lower() in KEYWORD_VERSIONS):
-            version = part
-        else:
-            variants.append(part)
-
-    return version, variants
 
 
 def split_namespace(full_name: str) -> tuple[str, str]:
@@ -168,7 +166,6 @@ async def async_request_with_retries(
     client: httpx.AsyncClient,
     method: str,
     url: str,
-    debug: bool = False,
     **kwargs: Any,
 ) -> httpx.Response:
     delay = RETRY_BASE_DELAY
@@ -176,8 +173,6 @@ async def async_request_with_retries(
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             response = await client.request(method, url, **kwargs)
-            if debug:
-                console.print(f"{response.request.url}")
             if response.status_code in RETRY_STATUS_CODES:
                 if attempt == MAX_RETRIES:
                     response.raise_for_status()
@@ -345,7 +340,7 @@ def upsert_tags_for_payloads(
                 col(ImageTags.name).in_(tag_names),
             )
         ).all()
-        existing_by_key = {(tag.image_id, tag.name): tag for tag in existing_tags}
+        existing_by_key = {(tag.image_id, tag.name)                           : tag for tag in existing_tags}
 
     inserted = 0
     updated = 0
@@ -447,7 +442,6 @@ def format_platform(platform: dict[str, Any] | None) -> str | None:
 async def fetch_tags_for_image(
     client: httpx.AsyncClient,
     registry: str,
-    url: str,
     repo_name: str,
     skip_tags: frozenset[str] = frozenset(),
 ) -> tuple[list[TagPayload], int]:
@@ -725,8 +719,7 @@ def load_existing_tags(
 ) -> dict[tuple[str, str], frozenset[str]]:
     stmt = (
         select(Image.namespace_name, Image.name, ImageTags.name)
-        # type: ignore[arg-type]
-        .join(ImageTags, ImageTags.image_id == Image.id)
+        .join(ImageTags, ImageTags.image_id == Image.id)  # type: ignore[arg-type]
         .where(Image.src_registry == registry, Image.self_hosted == self_hosted)
     )
     rows = session.exec(stmt).all()
@@ -741,7 +734,6 @@ def load_existing_tags(
 @app.command()
 def process(
     registry: str,
-    url:str = "v2/",
     names_file: Path = DEFAULT_REPOS_FILE,
     db: str = DEFAULT_DB_URL,
     self_hosted: bool = False,
@@ -755,7 +747,6 @@ def process(
     asyncio.run(
         process_async(
             registry=registry,
-            url=url,
             names_file=names_file,
             db=db,
             self_hosted=self_hosted,
@@ -768,7 +759,6 @@ def process(
 
 async def process_async(
     registry: str,
-    url: str,
     names_file: Path,
     db: str,
     self_hosted: bool,
@@ -795,7 +785,6 @@ async def process_async(
     console.print(
         Panel.fit(
             f"[bold cyan]Registry[/bold cyan]      {registry}\n"
-            f"[bold cyan]Url[/bold cyan]           {url}\n"
             f"[bold cyan]Names file[/bold cyan]    {names_file}\n"
             f"[bold cyan]Total names[/bold cyan]   {total_expected}\n"
             f"[bold cyan]Downloaders[/bold cyan]   {downloaders}\n"
@@ -878,7 +867,7 @@ async def process_async(
 
             try:
                 tags, skipped = await fetch_tags_for_image(
-                    client, registry, url, item, skip_tags=skip_set)
+                    client, registry, item, skip_tags=skip_set)
                 stats["skipped_tags"] += skipped
                 await db_queue.put(
                     ImagePayload(

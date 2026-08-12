@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NamespaceIndexRouteImport } from './routes/$namespace/index'
 import { Route as NamespacesIndexRouteImport } from './routes/namespaces/index'
+import { Route as NamespacesPageRouteImport } from './routes/namespaces/$page'
 import { Route as NamespaceImageIndexRouteImport } from './routes/$namespace/$image/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const NamespacesIndexRoute = NamespacesIndexRouteImport.update({
   path: '/namespaces/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NamespacesPageRoute = NamespacesPageRouteImport.update({
+  id: '/namespaces/$page',
+  path: '/namespaces/$page',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NamespaceImageIndexRoute = NamespaceImageIndexRouteImport.update({
   id: '/$namespace/$image/',
   path: '/$namespace/$image/',
@@ -37,12 +43,14 @@ const NamespaceImageIndexRoute = NamespaceImageIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/namespaces/$page': typeof NamespacesPageRoute
   '/$namespace/': typeof NamespaceIndexRoute
   '/namespaces/': typeof NamespacesIndexRoute
   '/$namespace/$image/': typeof NamespaceImageIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/namespaces/$page': typeof NamespacesPageRoute
   '/$namespace': typeof NamespaceIndexRoute
   '/namespaces': typeof NamespacesIndexRoute
   '/$namespace/$image': typeof NamespaceImageIndexRoute
@@ -50,20 +58,38 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/namespaces/$page': typeof NamespacesPageRoute
   '/$namespace/': typeof NamespaceIndexRoute
   '/namespaces/': typeof NamespacesIndexRoute
   '/$namespace/$image/': typeof NamespaceImageIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$namespace/' | '/namespaces/' | '/$namespace/$image/'
+  fullPaths:
+    | '/'
+    | '/namespaces/$page'
+    | '/$namespace/'
+    | '/namespaces/'
+    | '/$namespace/$image/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$namespace' | '/namespaces' | '/$namespace/$image'
-  id: '__root__' | '/' | '/$namespace/' | '/namespaces/' | '/$namespace/$image/'
+  to:
+    | '/'
+    | '/namespaces/$page'
+    | '/$namespace'
+    | '/namespaces'
+    | '/$namespace/$image'
+  id:
+    | '__root__'
+    | '/'
+    | '/namespaces/$page'
+    | '/$namespace/'
+    | '/namespaces/'
+    | '/$namespace/$image/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NamespacesPageRoute: typeof NamespacesPageRoute
   NamespaceIndexRoute: typeof NamespaceIndexRoute
   NamespacesIndexRoute: typeof NamespacesIndexRoute
   NamespaceImageIndexRoute: typeof NamespaceImageIndexRoute
@@ -92,6 +118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NamespacesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/namespaces/$page': {
+      id: '/namespaces/$page'
+      path: '/namespaces/$page'
+      fullPath: '/namespaces/$page'
+      preLoaderRoute: typeof NamespacesPageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$namespace/$image/': {
       id: '/$namespace/$image/'
       path: '/$namespace/$image'
@@ -104,6 +137,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NamespacesPageRoute: NamespacesPageRoute,
   NamespaceIndexRoute: NamespaceIndexRoute,
   NamespacesIndexRoute: NamespacesIndexRoute,
   NamespaceImageIndexRoute: NamespaceImageIndexRoute,

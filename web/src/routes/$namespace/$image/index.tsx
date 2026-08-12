@@ -69,7 +69,7 @@ function RouteComponent() {
                                     </Text>
                                     <Title order={1} fw={500} fz={"36px"}
                                            ff={'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'}>
-                                        {namespace}/{image}
+                                        <Link to={"/$namespace"} params={{namespace}}>{namespace}</Link>/{image}
                                     </Title>
                                 </Stack>
                                 {/*<Stack gap={0}>

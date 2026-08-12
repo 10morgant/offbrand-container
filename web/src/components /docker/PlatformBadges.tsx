@@ -36,7 +36,7 @@ export function PlatformBadge({val}: PlatformBadgeProps) {
 
 export function PlatformBadges({platforms, maxDisplay = 4}: PlatformBadgesProps) {
     return (
-        <Flex w={250} wrap={"wrap"} gap={4}>
+        <Flex w={200} wrap={"wrap"} gap={4}>
             {platforms.slice(0, maxDisplay).map((platform) => (
                 <PlatformBadge val={platform}/>
             ))}
