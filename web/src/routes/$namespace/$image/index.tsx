@@ -2,7 +2,7 @@ import {createFileRoute, Link} from '@tanstack/react-router'
 import {colourTheme} from "#/config/colours.ts";
 import {
     ActionIcon,
-    Badge,
+    Badge, Box,
     Breadcrumbs,
     Button,
     Code,
@@ -34,6 +34,8 @@ function RouteComponent() {
     const {config} = useRegistryContext()
     const {
         data,
+        isError,
+        error,
         isLoading
     } = useQuery(fetchNamespaceImageOptions(config?.url ?? "http://example.com", namespace, image))
 
@@ -47,6 +49,13 @@ function RouteComponent() {
 
     return (
         <>
+            {isError && <Box bg={"red"}>
+                <Container size={1400} pt={5} pb={5}>
+                    <Stack gap={60} align={"center"}>
+                        <Title order={3}>{error.message}</Title>
+                    </Stack>
+                </Container>
+            </Box>}
             <div style={{backgroundColor: colourTheme.hero_body}}>
                 <Container size={1400} pt={40} pb={40}>
                     <Stack gap={60}>

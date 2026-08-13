@@ -113,6 +113,9 @@ export const fetchNamespaceImage = async (url: string, namespace: string, image:
     )
 
     if (!response.ok) {
+        if (response.status === 404) {
+            throw new Error(`Image ${namespace}/${image} not found`)
+        }
         throw new Error(
             `Failed to fetch catalog: ${response.status} ${response.statusText}`
         )

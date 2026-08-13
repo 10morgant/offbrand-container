@@ -212,6 +212,7 @@ async def fetch_image(
     dbo = result.first()
     if dbo:
         return ImageDBOtoRead(dbo, True)
+    raise HTTPException(404, f"{namespace}/{image} not found")
 
 
 async def search_table(session: AsyncSession, model, url: str, q: str, limit: int = 25):
