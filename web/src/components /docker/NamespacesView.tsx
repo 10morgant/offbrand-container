@@ -72,7 +72,7 @@ export function NamespacesView({initialPageSize = DEFAULT_PAGE_SIZE, cols = 4, v
         const nextSize = parseInt(value, 10);
         setPageSize(nextSize);
         setPage(1);
-        navigate({to: '/namespaces/'});
+        navigate({to: '/namespaces'});
     };
 
     return (

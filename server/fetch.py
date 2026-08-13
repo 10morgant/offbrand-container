@@ -89,11 +89,18 @@ def parse_tag(tag: str) -> tuple[str | None, list[str]]:
     version: str | None = None
     variants: list[str] = []
 
-    for part in parts:
-        if version is None and (_VERSION_RE.match(part) or part.lower() in KEYWORD_VERSIONS):
-            version = part
+    ver_part = parts[0]
+    try:
+        ver_ = parse(ver_part)
+        version = str(ver_)
+    except InvalidVersion:
+        if ver_part.lower() in KEYWORD_VERSIONS:
+            version = ver_part
         else:
-            variants.append(part)
+            variants.append(ver_part)
+
+    for part in parts[1:]:
+        variants.append(part)
 
     return version, variants
 

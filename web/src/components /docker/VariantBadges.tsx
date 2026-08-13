@@ -12,13 +12,14 @@ export interface VariantBadgeProps {
     onclick: (variant: string) => void
 }
 
-const platformColorMap: Record<string, string> = {
+export const platformColorMap: Record<string, string> = {
     "bookworm": "#D70A53",
     "bullseye": "#D70A53",
     "buster": "#D70A53",
     "trixie": "#D70A53",
     "slim": "yellow",
     "alpine": "#0D597F",
+    "alpine3.20": "#0D597F",
     "alpine3.21": "#0D597F",
     "alpine3.22": "#0D597F",
     "alpine3.23": "#0D597F",
@@ -40,7 +41,12 @@ const platformColorMap: Record<string, string> = {
 export function VariantBadge({val, onclick}: VariantBadgeProps) {
     const color = platformColorMap[val] ?? "gray"
     return (
-        <Badge color={color} variant={""} onClick={() => onclick(val)} style={{cursor: "pointer"}}>
+        <Badge
+            color={color}
+            variant={"dot"}
+            onClick={() => onclick(val)} style={{cursor: "pointer"}}
+
+        >
             {val}
         </Badge>
     )
