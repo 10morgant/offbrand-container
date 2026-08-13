@@ -23,6 +23,7 @@ class Image(SQLModel, table=True):
     self_hosted: bool = False
     src_registry: str = "?"
     namespace_name: str = "?"
+    qualified_name: str = "?"
 
     namespace_id: Optional[int] = Field(
         default=None, foreign_key="namespace.id")

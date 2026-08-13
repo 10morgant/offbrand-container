@@ -38,7 +38,7 @@ export function SearchServer() {
     })
 
     const packages: PackageInfo[] = (searchQuery.data?.images ?? []).map((image) => {
-        const version = image.latest
+        const version = image.latest ?? "-"
         const desc = image.tags?.length
             ? `${image.tags?.length} tag${image.tags?.length === 1 ? '' : 's'}: ${image.tags?.slice(0, 5).join(', ')}${image.tags.length > 5 ? '…' : ''}`
             : '';
@@ -46,6 +46,17 @@ export function SearchServer() {
         const namespace = image.namespace_name
         return {name, namespace, version, desc};
     });
+
+    const both: PackageInfo[] = (searchQuery.data?.qualified ?? []).map((image) => {
+        const version = image.latest ?? "-"
+        const desc = image.tags?.length
+            ? `${image.tags?.length} tag${image.tags?.length === 1 ? '' : 's'}: ${image.tags?.slice(0, 5).join(', ')}${image.tags.length > 5 ? '…' : ''}`
+            : '';
+        const name = image.name
+        const namespace = image.namespace_name
+        return {name, namespace, version, desc};
+    });
+
 
     const namespaces: NamespaceInfo[] = (searchQuery.data?.namespaces ?? []).map((ns) => (
         {name: ns.name, imageCount: ns.num_images}
@@ -77,6 +88,24 @@ export function SearchServer() {
         {
             label: isNamespaceQuery ? `${nsPrefix}/* images` : `Images ${packages.length}`,
             options: packages.map((pkg, i) => ({
+                value: `${pkg.namespace}/${pkg.name}`,
+                content: (
+                    <Stack key={`im_${i}`} gap={3}>
+                        <Group gap={6}>
+                            <IconBrandDocker color={"#2560FF"}/>
+                            {/*<Highlight highlight={trimmed} size="sm" c="#2496ED">*/}
+                            <Text fw={600} c="#e8edf1">{pkg.namespace}/{pkg.name}</Text>
+                            {/*</Highlight>*/}
+                            {/*<Text size="sm" c="#2496ED">{pkg.version}</Text>*/}
+                        </Group>
+                        <Text size="sm" c="#5a6672">{pkg.desc}</Text>
+                    </Stack>
+                ),
+            })),
+        },
+        {
+            label: "Exact matches",
+            options: both.map((pkg, i) => ({
                 value: `${pkg.namespace}/${pkg.name}`,
                 content: (
                     <Stack key={`im_${i}`} gap={3}>

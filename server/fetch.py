@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 import time
-from typing import Any, Iterable, Iterator
+from typing import Any, Callable, Iterable, Iterator
 from urllib.parse import parse_qs, unquote, urlparse
 
 import httpx
@@ -322,6 +322,7 @@ def ensure_images(
                 src_registry=registry,
                 namespace_name=namespace_name,
                 namespace_id=namespace_id,
+                qualified_name=f"{namespace_name}/{image_name}"
             )
         )
 
@@ -457,6 +458,8 @@ async def fetch_tags_for_image(
     url: str,
     repo_name: str,
     skip_tags: frozenset[str] = frozenset(),
+    on_tags_discovered: Callable[[int], None] | None = None,
+    on_tag_processed: Callable[[], None] | None = None,
 ) -> tuple[list[TagPayload], int]:
     try:
         tags_resp = await async_request_with_retries(client, "GET", f"{registry}/v2/{repo_name}/tags/list")
@@ -468,15 +471,22 @@ async def fetch_tags_for_image(
     tags = tags_resp.json().get("tags") or []
 
     result: list[TagPayload] = []
-    skipped = 0
 
-    for tag_name in tags:
-        if not isinstance(tag_name, str) or not tag_name:
-            continue
+    pending = [
+        tag_name
+        for tag_name in tags
+        if isinstance(tag_name, str) and tag_name and tag_name not in skip_tags
+    ]
+    skipped = len(
+        [tag_name for tag_name in tags if isinstance(tag_name, str) and tag_name in skip_tags]
+    )
 
-        if tag_name in skip_tags:
-            skipped += 1
-            continue
+    if on_tags_discovered is not None:
+        on_tags_discovered(len(pending))
+
+    for tag_name in pending:
+        if on_tag_processed is not None:
+            on_tag_processed()
 
         try:
             manifest_resp = await async_request_with_retries(
@@ -823,10 +833,14 @@ async def process_async(
         "queued": 0,
         "downloaded": 0,
         "failed": 0,
+        "processed_tags": 0,
         "db_batches": 0,
         "db_records": 0,
         "skipped_tags": 0,
     }
+
+    # Tags discovered/processed since the last DB flush; the tag bar resets each batch.
+    batch_tags = {"discovered": 0, "processed": 0}
 
     progress = Progress(
         SpinnerColumn(),
@@ -834,35 +848,56 @@ async def process_async(
         BarColumn(),
         MofNCompleteColumn(),
         TextColumn("[progress.percentage]{task.percentage:>5.1f}%"),
-        TextColumn(
-            "ok=[green]{task.fields[ok]}[/green] fail=[red]{task.fields[fail]}[/red] "
-            "batches=[cyan]{task.fields[batches]}[/cyan] tags=[magenta]{task.fields[tags]}[/magenta] "
-            "skipped=[yellow]{task.fields[skipped]}[/yellow]"
-        ),
+        TextColumn("{task.fields[info]}"),
         TimeElapsedColumn(),
         TimeRemainingColumn(),
         console=console,
     )
 
-    download_task = progress.add_task(
-        "Downloading tags",
+    image_task = progress.add_task(
+        "Images",
         total=total_expected,
-        ok=0,
-        fail=0,
-        batches=0,
-        tags=0,
-        skipped=0,
+        info="",
+    )
+    tag_task = progress.add_task(
+        "New tags (batch)",
+        total=0,
+        info="",
     )
 
     def refresh_task() -> None:
         progress.update(
-            download_task,
-            ok=stats["downloaded"],
-            fail=stats["failed"],
-            batches=stats["db_batches"],
-            tags=stats["db_records"],
-            skipped=stats["skipped_tags"],
+            image_task,
+            info=(
+                f"ok=[green]{stats['downloaded']}[/green] "
+                f"fail=[red]{stats['failed']}[/red] "
+                f"batches=[cyan]{stats['db_batches']}[/cyan]"
+            ),
         )
+        progress.update(
+            tag_task,
+            info=(
+                f"total=[magenta]{stats['processed_tags']}[/magenta] "
+                f"skipped=[yellow]{stats['skipped_tags']}[/yellow]"
+            ),
+        )
+
+    def reset_tag_bar() -> None:
+        in_flight = max(batch_tags["discovered"] - batch_tags["processed"], 0)
+        batch_tags["discovered"] = in_flight
+        batch_tags["processed"] = 0
+        progress.reset(tag_task, total=in_flight, completed=0, info="")
+        refresh_task()
+
+    def on_tags_discovered(count: int) -> None:
+        batch_tags["discovered"] += count
+        progress.update(tag_task, total=batch_tags["discovered"])
+
+    def on_tag_processed() -> None:
+        batch_tags["processed"] += 1
+        stats["processed_tags"] += 1
+        progress.advance(tag_task, 1)
+        refresh_task()
 
     async def producer() -> None:
         for name in iter_name_file(names_file):
@@ -885,7 +920,14 @@ async def process_async(
 
             try:
                 tags, skipped = await fetch_tags_for_image(
-                    client, registry, url, item, skip_tags=skip_set)
+                    client,
+                    registry,
+                    url,
+                    item,
+                    skip_tags=skip_set,
+                    on_tags_discovered=on_tags_discovered,
+                    on_tag_processed=on_tag_processed,
+                )
                 stats["skipped_tags"] += skipped
                 await db_queue.put(
                     ImagePayload(
@@ -901,7 +943,7 @@ async def process_async(
                 console.log(
                     f"[red]worker={worker_id} failed[/red] repo={item} err={exc}")
             finally:
-                progress.update(download_task, advance=1)
+                progress.update(image_task, advance=1)
                 refresh_task()
                 name_queue.task_done()
 
@@ -923,7 +965,7 @@ async def process_async(
                         changed = flush_payloads(session, batch)
                         stats["db_batches"] += 1
                         stats["db_records"] += changed
-                        refresh_task()
+                        reset_tag_bar()
                         batch = []
                     continue
 
@@ -933,7 +975,7 @@ async def process_async(
                         changed = flush_payloads(session, batch)
                         stats["db_batches"] += 1
                         stats["db_records"] += changed
-                        refresh_task()
+                        reset_tag_bar()
                     set_last_updated(session)
                     break
 
@@ -944,7 +986,7 @@ async def process_async(
                     changed = flush_payloads(session, batch)
                     stats["db_batches"] += 1
                     stats["db_records"] += changed
-                    refresh_task()
+                    reset_tag_bar()
                     batch = []
 
     with progress:

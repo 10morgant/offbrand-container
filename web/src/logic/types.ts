@@ -25,6 +25,7 @@ export interface ImagesRoot {
 export interface SearchRoot {
     namespaces: Namespace[]
     images: Image[]
+    qualified: Image[]
 }
 
 
@@ -35,7 +36,7 @@ export interface Image {
     namespace?: Namespace
     tags: Tag[]
     namespace_name: string
-    latest: string
+    latest?: string
     registry: string
 }
 

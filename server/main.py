@@ -257,19 +257,32 @@ async def search_table(session: AsyncSession, model, url: str, q: str, limit: in
     return result.all()
 
 
+async def search_both(session: AsyncSession, url: str, q: str, limit: int = 25):
+    stmt = select(Image).where(Image.src_registry == url).where(
+        Image.qualified_name.ilike(f"{q}%")).limit(limit)
+    result = await session.exec(stmt)
+    return result.all()
+
+
 @router.get("/search")
 async def search(
     url: str = Query(),
     q: str = Query(..., min_length=1, max_length=100),
     session: AsyncSession = Depends(get_session)
 ):
-    namespaces, images = await asyncio.gather(
-        search_table(session, Namespace, url, q),
-        search_table(session, Image, url, q),
+    query = q.strip()
+    query = query.removesuffix("/")
+    query = query.split(":")[0] if ":" in query else query
+
+    namespaces, images, both = await asyncio.gather(
+        search_table(session, Namespace, url, query),
+        search_table(session, Image, url, query),
+        search_both(session, url, query)
     )
     return {
         "namespaces": [r.dict() for r in namespaces],
         "images": [r.dict() for r in images],
+        "qualified": [r.dict() for r in both]
     }
 
 
