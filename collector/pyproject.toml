@@ -18,7 +18,9 @@ models = { path = "../models", editable = true }
 testpaths = ["tests"]
 
 [project.scripts]
-fetch = "collector.main:app"
+fetch = "collector.commands.fetch:app"
+names = "collector.commands.names:app"
+process = "collector.commands.process:app"
 fake = "collector.fake:main"
 
 [build-system]
