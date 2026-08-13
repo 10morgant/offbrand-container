@@ -28,7 +28,7 @@ from rich.traceback import install as install_rich_traceback
 from sqlmodel import SQLModel, Session, col, create_engine, select
 from packaging.version import parse, InvalidVersion
 
-from models import Image, ImageTags, Namespace, set_last_updated
+from models.models import Image, ImageTags, Namespace, set_last_updated
 
 install_rich_traceback(show_locals=False)
 console = Console()
@@ -743,7 +743,7 @@ def load_existing_tags(
     stmt = (
         select(Image.namespace_name, Image.name, ImageTags.name)
         # type: ignore[arg-type]
-        .join(ImageTags, ImageTags.image_id == Image.id)
+        .join(ImageTags, ImageTags.image_id == Image.id) # type: ignore
         .where(Image.src_registry == registry, Image.self_hosted == self_hosted)
     )
     rows = session.exec(stmt).all()

@@ -22,7 +22,9 @@
     "@types/semver": "^7.8.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "semver": "^7.8.5"
+    "semver": "^7.8.5",
+    "tailwindcss": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18"
   },
   "devDependencies": {
     "@tanstack/router-cli": "^1.167.28",

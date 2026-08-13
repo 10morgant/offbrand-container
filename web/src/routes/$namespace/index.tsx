@@ -6,6 +6,7 @@ import {useQuery} from "@tanstack/react-query";
 import {fetchNamespaceOptions} from "#/logic/queries.ts";
 import {useRegistryContext} from "#/context/RegistryContext.tsx";
 import {ImagesView} from "#/components /docker/ImagesView.tsx";
+import {BreadcrumItem} from "#/components /core/BreadcrumItem.tsx";
 
 export const Route = createFileRoute('/$namespace/')({
     component: RouteComponent,
@@ -21,9 +22,7 @@ function RouteComponent() {
         {title: <IconHomeFilled size={18}/>, href: '/'},
         {title: namespace, href: ''},
     ].map((item, index) => (
-        <Link to={item.href} params={{namespace: namespace}} key={index}>
-            {item.title}
-        </Link>
+        <BreadcrumItem key={index} item={item} params={{namespace: namespace}}/>
     ));
 
     return (

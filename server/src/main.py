@@ -1,24 +1,20 @@
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
-from contextlib import asynccontextmanager
-from dataclasses import dataclass
 import os
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, FastAPI, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 import yaml
-from models import Image, ImageDBOtoRead, ImagePage, ImageRead, ImageTags, LastUpdated, Namespace, NamespacePage, NamespaceRead, Stats
-from typing import List, Optional
+from models.models import Image, ImageDBOtoRead, ImagePage, ImageRead, ImageTags, LastUpdated, Namespace, NamespacePage, NamespaceRead, Stats
+from typing import Optional
 from sqlmodel import SQLModel, select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import selectinload
 
-from collect import collect
-from classes import Registry
+# from collector.src.collector.collect import collect
+from models.classes import Registry
 
 
 DEFAULT_DB_URL = "postgresql+psycopg2://appuser:StrongPassword123@localhost:5432/docker"
@@ -29,38 +25,6 @@ def get_async_db_url() -> str:
     if db.startswith("postgresql+psycopg2://"):
         return db.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
     return db
-
-
-executor = ProcessPoolExecutor(max_workers=1)
-
-
-def collect_data(reg: Registry, index: int):
-    # , drop=(index == 0))
-    collect(reg.url, db=db, self_hosted=reg.self_hosted)
-
-
-async def periodic_task():
-    loop = asyncio.get_running_loop()
-
-    while True:
-        read_registries()
-        for i, reg in enumerate(REGISTRIES):
-            print(f"Loading {reg.display_name}")
-            await loop.run_in_executor(
-                executor,
-                collect_data,
-                reg,
-                i
-            )
-
-        await asyncio.sleep(300)  # 5 minutes
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    task = asyncio.create_task(periodic_task())
-    yield
-    task.cancel()  # cleanup on shutdown
 
 
 app = FastAPI(

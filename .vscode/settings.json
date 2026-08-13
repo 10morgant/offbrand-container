@@ -1,9 +1,20 @@
 {
     "python-envs.pythonProjects": [
         {
-            "path": "server",
+            "path": "collector/src/collector",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
+        },
+        {
+            "path": "server/src",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
+        },
+        {
+            "path": "models/src/models",
             "envManager": "ms-python.python:venv",
             "packageManager": "ms-python.python:pip"
         }
     ]
+   
 }

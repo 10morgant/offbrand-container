@@ -2,18 +2,16 @@
 name = "server"
 version = "1.0.0"
 description = "Add your description here"
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "asyncpg>=0.30.0",
     "fastapi[standard]>=0.139.2",
-    "httpx>=0.28.1",
-    "packaging>=26.3",
+    "models",
     "psycopg2-binary>=2.9.12",
-    "pymysql>=1.2.0",
     "pyyaml>=6.0.3",
-    "pytest>=8.4.1",
     "requests>=2.34.2",
     "sqlmodel>=0.0.39",
-    "typer>=0.27.0",
 ]
+
+[tool.uv.sources]
+models = { path = "../models", editable = true }

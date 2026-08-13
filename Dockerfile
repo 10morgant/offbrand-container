@@ -17,9 +17,14 @@ FROM python:3.14 AS runner
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
-COPY server/pyproject.toml server/uv.lock ./
-RUN uv sync --locked
-COPY server/ .
+
+# The server lockfile points to ../models as an editable dependency.
+COPY models/ ./models/
+COPY server/ ./server/
+
+WORKDIR /app/server
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
 COPY --from=builder --chown=node:node /web/dist ./static
 
@@ -27,5 +32,5 @@ COPY --from=builder --chown=node:node /web/dist ./static
 EXPOSE 8000
 
 # Run the application.
-ENV PATH="/app/.venv/bin:$PATH"
-CMD [ "fastapi", "run", "main.py" ]
+ENV PATH="/app/server/.venv/bin:$PATH"
+CMD [ "fastapi", "run", "src/main.py" ]

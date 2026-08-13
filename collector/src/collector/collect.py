@@ -10,7 +10,7 @@ import typer
 from sqlmodel import SQLModel, Session, create_engine, insert, select
 import yaml
 
-from models import Image, Namespace, ImageTags, set_last_updated
+from models.models import Image, Namespace, ImageTags, set_last_updated
 from classes import Registry
 
 app = typer.Typer(add_completion=False)

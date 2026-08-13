@@ -17,6 +17,7 @@ export const platformColorMap: Record<string, string> = {
     "bullseye": "#D70A53",
     "buster": "#D70A53",
     "trixie": "#D70A53",
+    "debian": "#D70A53",
     "slim": "yellow",
     "alpine": "#0D597F",
     "alpine3.20": "#0D597F",

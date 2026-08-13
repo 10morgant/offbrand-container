@@ -11,7 +11,7 @@ Requires:
       `docker` commands (or run this script with sufficient privileges).
     - Network access to Docker Hub for pulling and to the target registry
       for pushing.
-    - `requests` (pip install requests)
+    - `httpx` (pip install httpx)
 """
 
 import argparse
@@ -19,19 +19,31 @@ import subprocess
 import sys
 import time
 
-import requests
+import httpx
+from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 
 HUB_API = "https://hub.docker.com/v2/repositories/{image}/tags"
+
+console = Console()
 
 
 def get_all_tags(image: str, page_size: int = 100, tag_filter: str | None = None):
     """Yield every tag name for `image` (e.g. 'library/python') from Docker Hub."""
     url = HUB_API.format(image=image) + f"?page_size={page_size}"
     while url:
-        resp = requests.get(url, timeout=30)
+        resp = httpx.get(url, timeout=30)
         try:
             resp.raise_for_status()
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             print(f"Error fetching tags from {url}: {e}")
             break
         data = resp.json()
@@ -43,32 +55,33 @@ def get_all_tags(image: str, page_size: int = 100, tag_filter: str | None = None
 
 
 def run(cmd: list[str]) -> bool:
-    """Run a subprocess command, streaming output. Return True on success."""
-    print(f"  $ {' '.join(cmd)}")
-    result = subprocess.run(cmd)
+    """Run a subprocess command. Output is only shown on failure to keep the bar clean."""
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        console.log(f"[red]$ {' '.join(cmd)}[/red]")
+        if result.stderr:
+            console.log(result.stderr.strip())
     return result.returncode == 0
 
 
 def mirror_tag(image: str, tag: str, registry: str, retries: int = 2) -> bool:
     # src = f"{image}:{tag}"
-    src = f"library/node:lts-alpine"
+    src = f"{image}:latest"
+    # src = f"library/maven:latest"
     dst = f"{registry}/{image}:{tag}"
 
     for attempt in range(1, retries + 2):  # initial try + retries
-        print(f"[{tag}] pulling {src} (attempt {attempt})")
         # if not run(["docker", "pull", src]):
-        #     print(f"[{tag}] pull failed")
+        #     console.log(f"[{tag}] pull failed")
         #     time.sleep(2)
         #     continue
 
-        print(f"[{tag}] tagging as {dst}")
         if not run(["docker", "tag", src, dst]):
-            print(f"[{tag}] tag failed")
+            console.log(f"[yellow]{tag}[/yellow] tag failed (attempt {attempt})")
             continue
 
-        print(f"[{tag}] pushing {dst}")
         if not run(["docker", "push", dst]):
-            print(f"[{tag}] push failed")
+            console.log(f"[yellow]{tag}[/yellow] push failed (attempt {attempt})")
             time.sleep(2)
             continue
 
@@ -119,34 +132,58 @@ def main():
         tags = list(get_all_tags(args.image, tag_filter=args.filter))
 
     if not tags:
-        print("No tags found (check the image name / filter).")
+        console.print("[red]No tags found (check the image name / filter).[/red]")
         sys.exit(1)
 
-    print(f"Found {len(tags)} tag(s) to mirror:")
-    for t in tags:
-        print(f"  - {t}")
+    console.print(f"Found [bold cyan]{len(tags)}[/bold cyan] tag(s) to mirror")
 
     if args.dry_run:
-        print("\nDry run only, nothing pulled or pushed.")
+        for t in tags:
+            console.print(f"  - {t}")
+        console.print("\nDry run only, nothing pulled or pushed.")
         return
 
     failures = []
-    for i, tag in enumerate(tags, start=1):
-        print(f"\n=== [{i}/{len(tags)}] {args.image}:{tag} ===")
-        ok = mirror_tag(args.image, tag, args.registry)
-        if not ok:
-            failures.append(tag)
-        elif not args.keep_local:
-            src = f"{args.image}:{tag}"
-            dst = f"{args.registry}/{args.image}:{tag}"
-            run(["docker", "rmi", dst])
+    succeeded = 0
+    progress = Progress(
+        SpinnerColumn(),
+        TextColumn("[bold blue]Mirroring tags"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>5.1f}%"),
+        TextColumn("ok=[green]{task.fields[ok]}[/green] fail=[red]{task.fields[fail]}[/red]"),
+        TextColumn("[dim]{task.fields[tag]}[/dim]"),
+        TimeElapsedColumn(),
+        TimeRemainingColumn(),
+        console=console,
+    )
 
-    print("\n=== Summary ===")
-    print(f"Succeeded: {len(tags) - len(failures)}/{len(tags)}")
+    with progress:
+        task_id = progress.add_task("mirror", total=len(tags), ok=0, fail=0, tag="-")
+
+        if not run(["docker", "pull", f"{args.image}:latest"]):
+            console.log(f"{args.image}:latest pull failed")
+            time.sleep(2)
+
+        for tag in tags:
+            progress.update(task_id, tag=tag)
+            ok = mirror_tag(args.image, tag, args.registry)
+            if not ok:
+                failures.append(tag)
+            else:
+                succeeded += 1
+                if not args.keep_local:
+                    dst = f"{args.registry}/{args.image}:{tag}"
+                    run(["docker", "rmi", dst])
+
+            progress.update(task_id, advance=1, ok=succeeded, fail=len(failures))
+
+    console.print("\n[bold]Summary[/bold]")
+    console.print(f"Succeeded: [green]{succeeded}[/green]/{len(tags)}")
     if failures:
-        print("Failed tags:")
+        console.print("[red]Failed tags:[/red]")
         for t in failures:
-            print(f"  - {t}")
+            console.print(f"  - {t}")
         sys.exit(1)
 
 

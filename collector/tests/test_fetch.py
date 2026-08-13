@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from fetch import (
+from collector.main import (
     Image,
     Namespace,
     chunked,
