@@ -24,7 +24,7 @@ function Home() {
         <>
             <Hero/>
             <div style={{backgroundColor: colourTheme.brand_dark}}>
-                <Container size={1600} pt={40} pb={40}>
+                <Container pt={40} pb={40}>
                     <SimpleGrid cols={4}>
                         <StatCard
                             icon={<IconFolder size={24}/>}
@@ -60,12 +60,12 @@ function Home() {
             </div>
 
             <div>
-                <Container size={1600} pt={40} pb={40}>
+                <Container  pt={40} pb={40}>
                     <NamespacesView/>
                 </Container>
             </div>
             <div>
-                <Container size={1600} pt={40} pb={40}>
+                <Container  pt={40} pb={40}>
                     <ImagesView
                         viewType={"grid"}
                         showSearch={false}

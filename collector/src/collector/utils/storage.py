@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlmodel import Session, col, select
 
-from models.models import Image, ImageTags, Namespace
+from shared.models import Image, ImageTags, Namespace
 
 from .shared import ImagePayload, split_namespace
 

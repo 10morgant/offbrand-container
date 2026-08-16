@@ -28,7 +28,7 @@ function RouteComponent() {
     return (
         <>
             <div style={{backgroundColor: colourTheme.hero_body}}>
-                <Container size={1200} pt={40} pb={40}>
+                <Container pt={40} pb={40}>
                     <Stack gap={60}>
                         <Stack>
                             <Breadcrumbs>{breadcrumbItems}</Breadcrumbs>
@@ -58,7 +58,7 @@ function RouteComponent() {
                     </Stack>
                 </Container>
             </div>
-            <Container size={1200} pt={40} pb={40}>
+            <Container pt={40} pb={40}>
                 <ImagesView viewType={"grid"} data={data} loading={isLoading}/>
 
             </Container>

@@ -18,7 +18,7 @@ export function NamespacesPageLayout({page}: { page?: number }) {
         <>
             <Hero/>
             <div>
-                <Container size={1200} pt={40} pb={40}>
+                <Container pt={40} pb={40}>
                     <Stack>
                         <Breadcrumbs>{breadcrumbItems}</Breadcrumbs>
                         <NamespacesView viewType={"grid"} initialPageSize={24} page={page}/>

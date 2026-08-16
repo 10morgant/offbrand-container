@@ -28,7 +28,7 @@ const platformColorMap: Record<string, string> = {
 export function PlatformBadge({val}: PlatformBadgeProps) {
     const color = platformColorMap[val] ?? "gray"
     return (
-        <Badge color={color}>
+        <Badge color={color} variant={"dot"}>
             {val}
         </Badge>
     )

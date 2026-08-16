@@ -1,8 +1,9 @@
 import {createRootRoute, Link, Outlet} from '@tanstack/react-router'
 import {
     AppShell,
-    AppShellHeader,
+    AppShellHeader, Container,
     createTheme,
+    DataListItemLabel, DataListItemValue,
     Group,
     MantineProvider,
     Select,
@@ -48,7 +49,28 @@ const theme = createTheme({
             defaultProps: {
                 bg: colourTheme.hero_top
             }
-        })
+        }),
+        Container: Container.extend({
+            defaultProps: {
+                size: 1600
+            }
+        }),
+        DataListItemLabel: DataListItemLabel.extend({
+            defaultProps: {
+                fz: 16,
+                fw: 500,
+                c:"white",
+                tt:"uppercase"
+            }
+        }),
+        DataListItemValue: DataListItemValue.extend({
+            defaultProps: {
+                fz: 16,
+                fw: 500,
+                c:"rgb(93, 202, 165)",
+                tt:"uppercase"
+            }
+        }),
     },
     fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
 })

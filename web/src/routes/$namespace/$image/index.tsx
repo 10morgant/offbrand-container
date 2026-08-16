@@ -7,22 +7,32 @@ import {
     Button,
     Code,
     Container,
-    CopyButton,
+    CopyButton, DataList,
     Flex,
-    Group,
-    Paper,
+    Group, NumberFormatter,
+    Paper, SimpleGrid,
     Stack,
     Text,
     Title,
     Tooltip
 } from "@mantine/core";
-import {IconArrowLeft, IconCheck, IconCopy, IconHomeFilled, IconInfoCircle} from "@tabler/icons-react";
+import {
+    IconArrowLeft,
+    IconBox,
+    IconCheck,
+    IconCopy,
+    IconFolder,
+    IconHomeFilled,
+    IconInfoCircle, IconServer, IconTag
+} from "@tabler/icons-react";
 import {TagView} from "#/components /docker/TagsView.tsx";
 import {useQuery} from "@tanstack/react-query";
 import {fetchNamespaceImageOptions} from "#/logic/queries.ts";
 import {useRegistryContext} from "#/context/RegistryContext.tsx";
 import {getUrlString} from "#/logic/utils.ts";
 import {BreadcrumItem} from "#/components /core/BreadcrumItem.tsx";
+import {StatCard} from "#/components /core/StatsCards.tsx";
+import {getLatestVersionNumber} from "#/logic/version.ts";
 
 export const Route = createFileRoute('/$namespace/$image/')({
     component: RouteComponent,
@@ -50,14 +60,14 @@ function RouteComponent() {
     return (
         <>
             {isError && <Box bg={"red"}>
-                <Container size={1400} pt={5} pb={5}>
+                <Container pt={5} pb={5}>
                     <Stack gap={60} align={"center"}>
                         <Title order={3}>{error.message}</Title>
                     </Stack>
                 </Container>
             </Box>}
             <div style={{backgroundColor: colourTheme.hero_body}}>
-                <Container size={1400} pt={40} pb={40}>
+                <Container pt={40} pb={40}>
                     <Stack gap={60}>
                         <Stack>
                             <Flex justify={"space-between"}>
@@ -88,26 +98,25 @@ function RouteComponent() {
                                         }}>{namespace}</Link>/{image}
                                     </Title>
                                 </Stack>
-                                {/*<Stack gap={0}>
-                                    <Flex gap={10} align={"center"}>
-                                        <Text fz={"14px"} fw={500} tt="uppercase">
-                                            Latest
-                                        </Text>
-                                        <span style={{color: "rgb(93, 202, 165)"}}>9.4.2</span>
-                                    </Flex>
-                                    <Flex gap={10} align={"center"}>
-                                        <Text fz={"14px"} fw={500} tt="uppercase">
-                                            Updated
-                                        </Text>
-                                        <span style={{color: "#fff"}}>2026-07-21</span>
-                                    </Flex>
-                                </Stack>*/}
+                                <DataList orientation="horizontal">
+                                    <DataList.Item>
+                                        <DataList.ItemLabel> Versions</DataList.ItemLabel>
+                                        <DataList.ItemValue>{data?.tags.length ?? 0}</DataList.ItemValue>
+                                    </DataList.Item>
+                                    <DataList.Item>
+                                        <DataList.ItemLabel> Latest</DataList.ItemLabel>
+                                        <DataList.ItemValue>
+                                            {getLatestVersionNumber(data?.tags.map((tag) => (tag.version ?? "0.0.0")) ?? [])}
+                                        </DataList.ItemValue>
+                                    </DataList.Item>
+                                </DataList>
+
                             </Flex>
                         </Stack>
                     </Stack>
                 </Container>
             </div>
-            <Container size={1400} pt={40}>
+            <Container pt={40}>
                 <Stack>
                     <Paper withBorder p={10}>
                         Docker pull command

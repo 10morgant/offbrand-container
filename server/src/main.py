@@ -4,8 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
-import yaml
-from models.models import Image, ImageDBOtoRead, ImagePage, ImageRead, ImageTags, LastUpdated, Namespace, NamespacePage, NamespaceRead, Stats
+from shared.models import Image, ImageDBOtoRead, ImagePage, ImageRead, ImageTags, LastUpdated, Namespace, NamespacePage, NamespaceRead, Stats
 from typing import Optional
 from sqlmodel import SQLModel, select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -14,7 +13,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import selectinload
 
 # from collector.src.collector.collect import collect
-from models.classes import Registry
+
+from shared.utils import read_registries
 
 
 DEFAULT_DB_URL = "postgresql+psycopg2://appuser:StrongPassword123@localhost:5432/docker"
@@ -45,23 +45,13 @@ async def get_session():
         yield session
 
 
-def read_registries():
-    print("Reading registries")
-    with open("registries.yaml", "r") as f:
-        data = yaml.safe_load(f)
-        global REGISTRIES
-        print(f"OLD {REGISTRIES}")
-        REGISTRIES = [
-            Registry(**fields)
-            for _, fields in data["registries"].items()
-        ]
-        print(f"NEW {REGISTRIES}")
-
-
 @router.get("/registries")
 def get_registries():
+    global REGISTRIES
     if len(REGISTRIES) < 1:
-        read_registries()
+        reg = read_registries()
+        if reg:
+            REGISTRIES = reg
     return REGISTRIES
 
 

@@ -16,7 +16,7 @@ def request_with_retries(
     client: httpx.Client,
     method: str,
     url: str,
-    debug: bool = True,
+    debug: bool = False,
     **kwargs: Any,
 ) -> httpx.Response:
     delay = RETRY_BASE_DELAY

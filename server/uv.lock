@@ -577,23 +577,6 @@ wheels = [
 ]
 
 [[package]]
-name = "models"
-version = "0.1.0"
-source = { editable = "../models" }
-dependencies = [
-    { name = "asyncpg" },
-    { name = "psycopg2-binary" },
-    { name = "sqlmodel" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "asyncpg", specifier = ">=0.30.0" },
-    { name = "psycopg2-binary", specifier = ">=2.9.12" },
-    { name = "sqlmodel", specifier = ">=0.0.39" },
-]
-
-[[package]]
 name = "psycopg2-binary"
 version = "2.9.12"
 source = { registry = "https://pypi.org/simple" }
@@ -907,10 +890,10 @@ source = { virtual = "." }
 dependencies = [
     { name = "asyncpg" },
     { name = "fastapi", extra = ["standard"] },
-    { name = "models" },
     { name = "psycopg2-binary" },
     { name = "pyyaml" },
     { name = "requests" },
+    { name = "shared" },
     { name = "sqlmodel" },
 ]
 
@@ -918,10 +901,27 @@ dependencies = [
 requires-dist = [
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.139.2" },
-    { name = "models", editable = "../models" },
     { name = "psycopg2-binary", specifier = ">=2.9.12" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "requests", specifier = ">=2.34.2" },
+    { name = "shared", editable = "../shared" },
+    { name = "sqlmodel", specifier = ">=0.0.39" },
+]
+
+[[package]]
+name = "shared"
+version = "0.2.0"
+source = { editable = "../shared" }
+dependencies = [
+    { name = "asyncpg" },
+    { name = "psycopg2-binary" },
+    { name = "sqlmodel" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "asyncpg", specifier = ">=0.30.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.12" },
     { name = "sqlmodel", specifier = ">=0.0.39" },
 ]
 
