@@ -1,0 +1,10 @@
+registries:
+  name:
+    display_name: "My local registry"
+    url: "http://0.0.0.0:5000"
+    self_hosted: true
+
+  name1:
+    display_name: "display_name1"
+    url: "http://0.0.0.0:5001"
+    self_hosted: false
